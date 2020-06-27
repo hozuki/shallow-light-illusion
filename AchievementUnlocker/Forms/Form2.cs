@@ -197,7 +197,7 @@ namespace AchievementUnlocker.Forms {
         private static Task<Bitmap> GetAchievementIconAsync(string achId) {
             Bitmap result = null;
             Callback<UserAchievementIconFetched_t> callback = null;
-            AutoResetEvent ev;
+            AutoResetEvent ev = null;
 
             void OnIconFetched(UserAchievementIconFetched_t e) {
                 result = GetBitmapFromHandle(e.m_nIconHandle);
@@ -212,9 +212,13 @@ namespace AchievementUnlocker.Forms {
             if (iconHandle != 0) {
                 result = GetBitmapFromHandle(iconHandle);
             } else {
-                ev = new AutoResetEvent(false);
-                callback = new Callback<UserAchievementIconFetched_t>(OnIconFetched);
-                ev.WaitOne();
+                try {
+                    ev = new AutoResetEvent(false);
+                    callback = new Callback<UserAchievementIconFetched_t>(OnIconFetched);
+                    ev.WaitOne();
+                } finally {
+                    ev?.Dispose();
+                }
             }
 
             return Task.FromResult(result);
